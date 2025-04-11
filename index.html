@@ -28,6 +28,11 @@
     /* Include padding in width calculations */
   }
 
+  .error {
+    border: 2px solid red;
+    background-color: #ecafaf;
+  }
+
   /* Mobile Styles (adjust breakpoint as needed) */
   @media (max-width: 600px) {
     .column {
@@ -42,7 +47,8 @@
   <h1 id="title">Ewbank Grader</h1>
   <div class="container">
     <div class="column">
-      <div id="text">Enter strings like "25 N 25 G 25", currently spaces important. Rest options are N, B, M and G.</div>
+      <div id="text">Enter strings like "25 N 25 G 25", currently spaces important. Rest options are N, B, M and G.
+      </div>
       <input type="text" id="input" name="input" size="80"><br>
       <input type="range" id="slider" min="0.1" max="0.4" step="0.01" value="0.25">
       <div id="sliderOutput">Gradient: 0.25</div>
@@ -79,7 +85,7 @@
 
     document.querySelector("#save").addEventListener("click", function () {
       // save current state to local storage json object.
-      ewbankClimbList.push({ 'climbString': climbString.value, 'slider': slider.value, 'grade': solve(climbString.value)});
+      ewbankClimbList.push({ 'climbString': climbString.value, 'slider': slider.value, 'grade': solve(climbString.value) });
       localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
       updateClimbList()
       console.log(ewbankClimbList);
@@ -95,8 +101,11 @@
       // deal with different data strings
       // 25n25g28 etc v5bv5 
       // need to recursively solve - need lots of error checking.
-      result = solve(climbString.value);
-      document.getElementById('output').innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
+      let input = formatGradeString(climbString.value);
+      if (input != "Error"){
+        result = solve(input);
+        document.getElementById('output').innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
+      }
     };
 
     function graphIt() {
@@ -105,7 +114,7 @@
         // Destroy the existing chart instance.
         graph.destroy();
       }
-      let quadraticData = [[],[],[],[]];
+      let quadraticData = [[], [], [], []];
       let restOptions = ["N", "B", "M", "G"];
       for (i = 0; i < 4; i++) {
         restValue = getRestValue(restOptions[i]);
@@ -114,7 +123,7 @@
         let b = (restValue / 8) - 8 * a;
         let c = 0;
         for (let x = -8; x <= 8; x += 1) {
-          quadraticData[i].push({ x: x, y: a * (x+8) * (x+8) + b * (x+8) + c });
+          quadraticData[i].push({ x: x, y: a * (x + 8) * (x + 8) + b * (x + 8) + c });
         }
       }
       graph = new Chart(ctx, {
@@ -125,17 +134,17 @@
             data: quadraticData[0],
             borderColor: 'red',
             fill: false
-          },{
+          }, {
             label: 'Bad Rest',
             data: quadraticData[1],
             borderColor: 'blue',
             fill: false
-          },{
+          }, {
             label: 'Moderate Rest',
             data: quadraticData[2],
             borderColor: 'green',
             fill: false
-          },{
+          }, {
             label: 'Good Rest',
             data: quadraticData[3],
             borderColor: 'orange',
@@ -145,11 +154,11 @@
         options: {
           scales: {
             x: {
-                        type: 'linear',
-                        position: 'bottom',
-                        min: -8, // Set the minimum x-value
-                        max: 8  // Set the maximum x-value
-                    },
+              type: 'linear',
+              position: 'bottom',
+              min: -8, // Set the minimum x-value
+              max: 8  // Set the maximum x-value
+            },
             y: { type: 'linear', position: 'left' }
           }
         }
@@ -158,7 +167,6 @@
 
     function solve(inputString) {
       gradeArray = inputString.split(" ");
-      console.log(gradeArray);
       if (gradeArray.length === 3) {
         return addTwoEwbank(gradeArray[0], gradeArray[1], gradeArray[2]);
       } else if (gradeArray.length < 3) {
@@ -193,6 +201,43 @@
         console.log("non number input: " + start + " or " + end);
         return "can't grade it";
       }
+    }
+
+    function formatGradeString(inputString) {
+      if (typeof inputString !== 'string') {
+        climbString.classList.add("error");
+        return "Error";
+      }
+
+      const parts = inputString.toUpperCase().split(/[NBGM]+/); // Split by N, B, M, G, case-insensitive
+      const separators = inputString.toUpperCase().match(/[NBGM]+/g) || []; // Extract separators
+
+      let formattedString = "";
+      let partIndex = 0;
+      let separatorIndex = 0;
+
+      while (partIndex < parts.length) {
+        let part = parts[partIndex].trim(); // Remove leading/trailing spaces
+        if (part) {
+          if (!isNaN(parseFloat(part))) {
+            if (formattedString) { // Add space if it's not the first part
+              formattedString += " ";
+            }
+            formattedString += parseFloat(part); // Ensure number is parsed as float
+          } else {
+            climbString.classList.add("error");
+            return "Error";
+          }
+        }
+
+        if (separatorIndex < separators.length) {
+          formattedString += " " + separators[separatorIndex];
+          separatorIndex++;
+        }
+        partIndex++;
+      }
+      climbString.classList.remove("error");
+      return formattedString.trim(); // Remove trailing spaces
     }
 
     function getRestValue(restType) {
@@ -232,7 +277,7 @@
         nameInput.classList.add("listName");
 
         let listItem = document.createElement("li");
-        let climbText = document.createTextNode(" " + climb.climbString + " slider: "+ climb.slider + " = " + climb.grade);
+        let climbText = document.createTextNode(" " + climb.climbString + " slider: " + climb.slider + " = " + climb.grade);
         // Create the delete button
         let deleteButton = document.createElement("button");
         deleteButton.textContent = "X";
