@@ -1,0 +1,268 @@
+<html>
+
+<head>
+  <title>Ewbank Grader</title>
+  <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<style>
+  body {
+    text-align: left;
+  }
+
+  h1 {
+    text-align: center;
+  }
+
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    /* Important for mobile responsiveness */
+  }
+
+  .column {
+    flex: 1;
+    /* Equal width columns by default */
+    padding: 20px;
+    box-sizing: border-box;
+    /* Include padding in width calculations */
+  }
+
+  /* Mobile Styles (adjust breakpoint as needed) */
+  @media (max-width: 600px) {
+    .column {
+      flex: 1 0 100%;
+      /* Make each column full width on mobile */
+    }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<body>
+  <h1 id="title">Ewbank Grader</h1>
+  <div class="container">
+    <div class="column">
+      <div id="text"></div>
+      <input type="text" id="input" name="input" size="80"><br>
+      <input type="range" id="slider" min="0.1" max="0.4" step="0.01" value="0.25">
+      <div id="sliderOutput">Gradient: 0.25</div>
+      <div>Grade:<span id="output"></span></div>
+      <button id="save">Save to local storage</button>
+      <canvas id="myChart"></canvas>
+    </div>
+    <div class="column">
+      <ul id="climbList"></ul>
+    </div>
+  </div>
+  <script>
+    /**************************************
+      Constants and Variables
+    **************************************/
+    let ewbankClimbList = []; //load from local storage
+    const slider = document.getElementById("slider");
+    const climbString = document.getElementById("input");
+    const sliderOutput = document.getElementById("sliderOutput");
+    let climbListUL = document.getElementById("climbList");
+    const gradeUpperBounds = { "soft": 0.75, "middle": 0, "hard": 0.25, "slash": 0.5 }; // no longer needed?
+    let output = document.querySelector("#sliderOutput");
+    let restGaps = { "G": 1.75, "M": 2, "B": 2.25, "N": 2.5 };
+    const ctx = document.getElementById('myChart').getContext('2d');
+    let graph = null;
+
+    /**************************************
+      Functions
+      take string like "32 N 20 B 25" and return single grade.
+    **************************************/
+    climbString.addEventListener("input", function () {
+      gradeIt();
+    });
+
+    document.querySelector("#save").addEventListener("click", function () {
+      // save current state to local storage json object.
+      ewbankClimbList.push({ 'climbString': climbString.value, 'slider': slider.value, 'grade': solve(climbString.value)});
+      localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
+      updateClimbList()
+      console.log(ewbankClimbList);
+    });
+
+    slider.addEventListener("input", function () {
+      sliderOutput.textContent = "Gradient: " + slider.value;
+      gradeIt();
+      graphIt();
+    });
+
+    function gradeIt() {
+      // deal with different data strings
+      // 25n25g28 etc v5bv5 
+      // need to recursively solve - need lots of error checking.
+      result = solve(climbString.value);
+      document.getElementById('output').innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
+    };
+
+    function graphIt() {
+      // Check if a chart instance already exists.
+      if (graph) {
+        // Destroy the existing chart instance.
+        graph.destroy();
+      }
+      let quadraticData = [[],[],[],[]];
+      let restOptions = ["N", "B", "M", "G"];
+      for (i = 0; i < 4; i++) {
+        restValue = getRestValue(restOptions[i]);
+        console.log("rest: " + restValue);
+        let a = ((4 - restValue) / 64)
+        let b = (restValue / 8) - 8 * a;
+        let c = 0;
+        for (let x = -8; x <= 8; x += 1) {
+          quadraticData[i].push({ x: x, y: a * (x+8) * (x+8) + b * (x+8) + c });
+        }
+      }
+      graph = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: [{
+            label: 'No Rest',
+            data: quadraticData[0],
+            borderColor: 'red',
+            fill: false
+          },{
+            label: 'Bad Rest',
+            data: quadraticData[1],
+            borderColor: 'blue',
+            fill: false
+          },{
+            label: 'Moderate Rest',
+            data: quadraticData[2],
+            borderColor: 'green',
+            fill: false
+          },{
+            label: 'Good Rest',
+            data: quadraticData[3],
+            borderColor: 'orange',
+            fill: false
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: -8, // Set the minimum x-value
+                        max: 8  // Set the maximum x-value
+                    },
+            y: { type: 'linear', position: 'left' }
+          }
+        }
+      });
+    }
+
+    function solve(inputString) {
+      gradeArray = inputString.split(" ");
+      console.log(gradeArray);
+      if (gradeArray.length === 3) {
+        return addTwoEwbank(gradeArray[0], gradeArray[1], gradeArray[2]);
+      } else if (gradeArray.length < 3) {
+        return "Enter string to grade, like '32 N 30 B 33 B 20'";
+      } else {
+        // split
+        startString = gradeArray[0] + " " + gradeArray[1] + " " + gradeArray[2];
+        endString = inputString.slice(startString.length);
+        newString = addTwoEwbank(gradeArray[0], gradeArray[1], gradeArray[2]) + endString;
+        return solve(newString);
+      }
+    }
+
+    // take 20 "B" 25 and return single grade.
+    function addTwoEwbank(start, rest, end) {
+      start = Number(start);
+      end = Number(end);
+      if (!isNaN(start) && !isNaN(end)) {
+        restValue = getRestValue(rest);
+        console.log("rest: " + restValue);
+        // Find a
+        let a = ((4 - restValue) / 64)
+        // Find b
+        let b = (restValue / 8) + 8 * a;
+        // Find c
+        let c = start;
+        console.log("a: " + a + " b: " + b + "c: " + c);
+        // Find quadratic.
+        let x = end - start;
+        return Math.round((a * x * x + b * x + c + restValue) * 100) / 100;
+      } else {
+        console.log("non number input: " + start + " or " + end);
+        return "can't grade it";
+      }
+    }
+
+    function getRestValue(restType) {
+      // take rest type and value from slider. slider.value
+      restGaps = { "G": 1, "M": 2, "B": 3, "N": 4 };
+      return slider.value * (restGaps[restType]) + 1.5;
+    }
+
+    function translateGradeValue(gradeValue) {
+      // take deciaml grade and output a string like [29 | 8a | 5.13a].Soft
+      // or 29.soft
+      let wholeGrade = Math.floor(gradeValue);
+      let decimal = gradeValue - wholeGrade;
+      if (decimal > gradeUpperBounds.soft) {
+        return (wholeGrade + 1) + ".soft";
+      } else if (decimal > gradeUpperBounds.slash) {
+        return wholeGrade + "/" + (wholeGrade + 1);
+      } else if (decimal > gradeUpperBounds.hard) {
+        return wholeGrade + ".hard";
+      } else {
+        return wholeGrade;
+      }
+    }
+
+    function updateClimbList() {
+      // Clear existing list items before adding new ones
+      while (climbListUL.firstChild) {
+        climbListUL.removeChild(climbListUL.firstChild);
+      }
+
+      // Loop through the climb list and add items to the list
+      ewbankClimbList.forEach(function (climb, index) {
+        // Create the input field
+        let nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = climb.name || ""; // Use climb.name or an empty string
+        nameInput.classList.add("listName");
+
+        let listItem = document.createElement("li");
+        let climbText = document.createTextNode(" " + climb.climbString + " slider: "+ climb.slider + " = " + climb.grade);
+        // Create the delete button
+        let deleteButton = document.createElement("button");
+        deleteButton.textContent = "X";
+        deleteButton.addEventListener("click", function () {
+          ewbankClimbList.splice(index, 1); // Remove the item from the array
+          localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList)); // Update local storage
+          updateClimbList(); // Re-render the list
+        });
+        listItem.appendChild(nameInput);
+        listItem.appendChild(climbText);
+        listItem.appendChild(deleteButton);
+        climbListUL.appendChild(listItem);
+
+        // Add the listener for tab out (blur event)
+        nameInput.addEventListener("blur", function () {
+          // Update the climb object in the array
+          ewbankClimbList[index].name = nameInput.value;
+          // Update local storage with the modified array
+          localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
+        });
+      });
+    }
+
+    // onload event
+    document.addEventListener("DOMContentLoaded", function () {
+      // Retrieve the climb list from local storage
+      ewbankClimbList = JSON.parse(localStorage.getItem("ewbankClimbList")) || [];
+      updateClimbList();
+      graphIt()
+    });
+
+
+  </script>
