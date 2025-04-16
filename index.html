@@ -33,6 +33,24 @@
     background-color: #ecafaf;
   }
 
+  #calibration {
+    padding: 0 18px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    background-color: #f1f1f1;
+  }
+
+  #calibration.show {
+    max-height: 500px;
+    /* Or any large number */
+  }
+
+  .collapsible {
+    margin-top:20px;
+    background-color: #ebe9e9;
+  }
+
   /* Mobile Styles (adjust breakpoint as needed) */
   @media (max-width: 600px) {
     .column {
@@ -50,13 +68,23 @@
       <div id="text">Enter strings like "25 N 25 G 25", currently spaces important. Rest options are N, B, M and G.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
-      <div><h3>Grade: <span id="output"></span></h3></div>
+      <div>
+        <h3>Grade: <span id="output"></span></h3>
+      </div>
       <button id="save">Save to local storage</button><br>
-      <input type="range" id="sliderN" min="1" max="4" step="0.01" value="2.5">
-      <div id="sliderOutputN">No rest change: 2.5</div>
-      <input type="range" id="sliderG" min="1" max="4" step="0.01" value="1.75">
-      <div id="sliderOutputG">Good rest change: 1.75</div>
-      <canvas id="myChart"></canvas>
+      <div class="collapsible"><strong>Calibration</strong></div>
+      <div id="calibration">
+        <div>To calibrate - think about two climbs of the same grade stacked on top of each other, one pair with no rest and another with a good rest between. 
+          Set N to be the no rest increase in grade, and G to be the good rest increase. 
+          By default N is 2.5, which means if you stack two 25s with no rest, you get a 27.5 (a 27/28).
+          A good rest would add 1.75 grades.
+        </div>
+        <input type="range" id="sliderN" min="1" max="4" step="0.01" value="2.5">
+        <div id="sliderOutputN">No rest change: 2.5</div>
+        <input type="range" id="sliderG" min="1" max="4" step="0.01" value="1.75">
+        <div id="sliderOutputG">Good rest change: 1.75</div>
+        <canvas id="myChart"></canvas>
+      </div>
     </div>
     <div class="column">
       <ul id="climbList"></ul>
@@ -72,6 +100,8 @@
     const climbString = document.getElementById("input");
     const sliderOutputN = document.getElementById("sliderOutputN");
     const sliderOutputG = document.getElementById("sliderOutputG");
+    const collapsible = document.querySelector(".collapsible");
+    const content = document.querySelector("#calibration");
     let climbListUL = document.getElementById("climbList");
     const gradeUpperBounds = { "soft": 0.75, "middle": 0, "hard": 0.25, "slash": 0.5 }; // no longer needed?
     //let output = document.querySelector("#sliderOutput");
@@ -107,12 +137,23 @@
       graphIt();
     });
 
+    collapsible.addEventListener("click", function () {
+      this.classList.toggle("active");
+      if (content.classList.contains('show')) {
+        content.classList.remove("show");
+      }
+      else {
+        content.classList.add("show");
+      }
+
+    });
+
     function gradeIt() {
       // deal with different data strings
       // 25n25g28 etc v5bv5 
       // need to recursively solve - need lots of error checking.
       let input = formatGradeString(climbString.value);
-      if (input != "Error"){
+      if (input != "Error") {
         result = solve(input);
         climbString.classList.remove("error");
         document.getElementById('output').innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
@@ -145,22 +186,22 @@
           datasets: [{
             label: 'No Rest',
             data: quadraticData[0],
-            borderColor: 'red',
+            borderColor: '#0000FF',
             fill: false
           }, {
             label: 'Bad Rest',
             data: quadraticData[1],
-            borderColor: 'blue',
+            borderColor: '#0080FF',
             fill: false
           }, {
             label: 'Moderate Rest',
             data: quadraticData[2],
-            borderColor: 'green',
+            borderColor: '#4682B4',
             fill: false
           }, {
             label: 'Good Rest',
             data: quadraticData[3],
-            borderColor: 'orange',
+            borderColor: '#5F9EA0',
             fill: false
           }]
         },
@@ -169,10 +210,15 @@
             x: {
               type: 'linear',
               position: 'bottom',
+              title: { display: true, text: 'Relative second grade', },
               min: -8, // Set the minimum x-value
               max: 8  // Set the maximum x-value
             },
-            y: { type: 'linear', position: 'left' }
+            y: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'Relative result grade', },
+            }
           }
         }
       });
@@ -200,14 +246,14 @@
       if (!isNaN(start) && !isNaN(end)) {
         restValue = getRestValue(rest);
         //test basic conditions
-        if(start <= (end-8)){
+        if (start <= (end - 8)) {
           return end;
         }
-        if(end <= (start-8)){
+        if (end <= (start - 8)) {
           return start;
         }
-        
-        
+
+
         // Find a
         let a = ((4 - restValue) / 64)
         // Find b
@@ -228,7 +274,7 @@
       if (typeof inputString !== 'string') {
         return "Error";
       }
-      if (!/[NBMGV]/i.test(inputString)){
+      if (!/[NBMGV]/i.test(inputString)) {
         return "Error";
       }
 
@@ -264,7 +310,7 @@
     function getRestValue(restType) {
       // take rest type and value from sliders
       restGaps = { "G": 0, "M": 1, "B": 2, "N": 3 };
-      return Number(restGaps[restType]*(sliderN.value-sliderG.value)/3) + Number(sliderG.value);
+      return Number(restGaps[restType] * (sliderN.value - sliderG.value) / 3) + Number(sliderG.value);
     }
 
     function translateGradeValue(gradeValue) {
@@ -298,7 +344,7 @@
         nameInput.classList.add("listName");
 
         let listItem = document.createElement("li");
-        let climbText = document.createTextNode(" " + climb.climbString + " = " + climb.grade + " [" + climb.sliderG+ ".." + climb.sliderN + "]");
+        let climbText = document.createTextNode(" " + climb.climbString + " = " + climb.grade + " [" + climb.sliderG + ".." + climb.sliderN + "]");
         // Create the delete button
         let deleteButton = document.createElement("button");
         deleteButton.textContent = "X";
