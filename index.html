@@ -50,10 +50,12 @@
       <div id="text">Enter strings like "25 N 25 G 25", currently spaces important. Rest options are N, B, M and G.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
-      <input type="range" id="slider" min="0.1" max="0.4" step="0.01" value="0.25">
-      <div id="sliderOutput">Gradient: 0.25</div>
       <div><h3>Grade: <span id="output"></span></h3></div>
-      <button id="save">Save to local storage</button>
+      <button id="save">Save to local storage</button><br>
+      <input type="range" id="sliderN" min="1" max="4" step="0.01" value="2.5">
+      <div id="sliderOutputN">No rest change: 2.5</div>
+      <input type="range" id="sliderG" min="1" max="4" step="0.01" value="1.75">
+      <div id="sliderOutputG">Good rest change: 1.75</div>
       <canvas id="myChart"></canvas>
     </div>
     <div class="column">
@@ -65,13 +67,15 @@
       Constants and Variables
     **************************************/
     let ewbankClimbList = []; //load from local storage
-    const slider = document.getElementById("slider");
+    const sliderN = document.getElementById("sliderN");
+    const sliderG = document.getElementById("sliderG");
     const climbString = document.getElementById("input");
-    const sliderOutput = document.getElementById("sliderOutput");
+    const sliderOutputN = document.getElementById("sliderOutputN");
+    const sliderOutputG = document.getElementById("sliderOutputG");
     let climbListUL = document.getElementById("climbList");
     const gradeUpperBounds = { "soft": 0.75, "middle": 0, "hard": 0.25, "slash": 0.5 }; // no longer needed?
-    let output = document.querySelector("#sliderOutput");
-    let restGaps = { "G": 1.75, "M": 2, "B": 2.25, "N": 2.5 };
+    //let output = document.querySelector("#sliderOutput");
+    //let restGaps = { "G": 1.75, "M": 2, "B": 2.25, "N": 2.5 };
     const ctx = document.getElementById('myChart').getContext('2d');
     let graph = null;
 
@@ -85,14 +89,20 @@
 
     document.querySelector("#save").addEventListener("click", function () {
       // save current state to local storage json object.
-      ewbankClimbList.push({ 'climbString': climbString.value, 'slider': slider.value, 'grade': solve(climbString.value) });
+      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': solve(climbString.value) });
       localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
       updateClimbList()
       console.log(ewbankClimbList);
     });
 
-    slider.addEventListener("input", function () {
-      sliderOutput.textContent = "Gradient: " + slider.value;
+    sliderN.addEventListener("input", function () {
+      sliderOutputN.textContent = "No rest change: " + sliderN.value;
+      gradeIt();
+      graphIt();
+    });
+
+    sliderG.addEventListener("input", function () {
+      sliderOutputG.textContent = "Good rest change: " + sliderG.value;
       gradeIt();
       graphIt();
     });
@@ -104,7 +114,10 @@
       let input = formatGradeString(climbString.value);
       if (input != "Error"){
         result = solve(input);
+        climbString.classList.remove("error");
         document.getElementById('output').innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
+      } else {
+        climbString.classList.add("error");
       }
     };
 
@@ -170,7 +183,7 @@
       if (gradeArray.length === 3) {
         return addTwoEwbank(gradeArray[0], gradeArray[1], gradeArray[2]);
       } else if (gradeArray.length < 3) {
-        return "Enter string to grade, like '32 N 30 B 33 B 20'";
+        return "Error";
       } else {
         // split
         startString = gradeArray[0] + " " + gradeArray[1] + " " + gradeArray[2];
@@ -186,11 +199,19 @@
       end = Number(end);
       if (!isNaN(start) && !isNaN(end)) {
         restValue = getRestValue(rest);
-        console.log("rest: " + restValue);
+        //test basic conditions
+        if(start <= (end-8)){
+          return end;
+        }
+        if(end <= (start-8)){
+          return start;
+        }
+        
+        
         // Find a
         let a = ((4 - restValue) / 64)
         // Find b
-        let b = (restValue / 8) + 8 * a;
+        let b = 0.5;
         // Find c
         let c = start;
         console.log("a: " + a + " b: " + b + "c: " + c);
@@ -199,13 +220,15 @@
         return Math.round((a * x * x + b * x + c + restValue) * 100) / 100;
       } else {
         console.log("non number input: " + start + " or " + end);
-        return "can't grade it";
+        return "Error";
       }
     }
 
     function formatGradeString(inputString) {
       if (typeof inputString !== 'string') {
-        climbString.classList.add("error");
+        return "Error";
+      }
+      if (!/[NBMGV]/i.test(inputString)){
         return "Error";
       }
 
@@ -225,7 +248,6 @@
             }
             formattedString += parseFloat(part); // Ensure number is parsed as float
           } else {
-            climbString.classList.add("error");
             return "Error";
           }
         }
@@ -236,14 +258,13 @@
         }
         partIndex++;
       }
-      climbString.classList.remove("error");
       return formattedString.trim(); // Remove trailing spaces
     }
 
     function getRestValue(restType) {
-      // take rest type and value from slider. slider.value
-      restGaps = { "G": 1, "M": 2, "B": 3, "N": 4 };
-      return slider.value * (restGaps[restType]) + 1.5;
+      // take rest type and value from sliders
+      restGaps = { "G": 0, "M": 1, "B": 2, "N": 3 };
+      return Number(restGaps[restType]*(sliderN.value-sliderG.value)/3) + Number(sliderG.value);
     }
 
     function translateGradeValue(gradeValue) {
@@ -277,7 +298,7 @@
         nameInput.classList.add("listName");
 
         let listItem = document.createElement("li");
-        let climbText = document.createTextNode(" " + climb.climbString + " slider: " + climb.slider + " = " + climb.grade);
+        let climbText = document.createTextNode(" " + climb.climbString + " = " + climb.grade + " [" + climb.sliderG+ ".." + climb.sliderN + "]");
         // Create the delete button
         let deleteButton = document.createElement("button");
         deleteButton.textContent = "X";
