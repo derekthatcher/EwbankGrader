@@ -6,8 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <style>
+  @import url('https://fonts.googleapis.com/css?family=Barlow|Barlow+Condensed|Barlow+Semi+Condensed&display=swap');
+
   body {
     text-align: left;
+    margin: 0;
+    font-family: 'Barlow', sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-transform: uppercase;
+    font-family: 'Barlow Semi Condensed', sans-serif;
+    line-height: 1.8em;
+    letter-spacing: 0.03em;
   }
 
   h1 {
@@ -15,6 +31,7 @@
   }
 
   .container {
+    min-height: 80vh;
     display: flex;
     flex-wrap: wrap;
     /* Important for mobile responsiveness */
@@ -60,6 +77,16 @@
     background-color: #ebe9e9;
   }
 
+  footer {
+    background-color: black;
+    text-align: center;
+  }
+
+  footer img {
+    width: 200px;
+    margin: 30px auto 100px auto;
+  }
+
   /* Mobile Styles (adjust breakpoint as needed) */
   @media (max-width: 600px) {
     .column {
@@ -74,7 +101,8 @@
   <h1 id="title">Ewbank Grader</h1>
   <div class="container">
     <div class="column">
-      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades seperated by a letter (N, B, M or G) for the rest.
+      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades seperated by a letter (N, B, M or G) for the
+        rest.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
       <div>
@@ -83,9 +111,10 @@
       <button id="save">Save to local storage</button><br>
       <div class="collapsible"><strong>Calibration</strong></div>
       <div id="calibration">
-        <div>To calibrate - think about two climbs of the same grade stacked on top of each other. One pair with no rest (N)
+        <div>To calibrate - think about two climbs of the same grade stacked on top of each other. One pair with no rest
+          (N)
           and another with a good rest (G) between.
-          Set N to be the no rest increase in grade, and G to be the good rest increase.<br/>
+          Set N to be the no rest increase in grade, and G to be the good rest increase.<br />
           For example, by default N is 2.5, which means if you stack two 25s with no rest you get a 27.5 (a 27/28).
           A good rest would add 1.75 grades and result in a hard 26.
         </div>
@@ -101,6 +130,9 @@
       <ul id="climbList"></ul>
     </div>
   </div>
+  <footer>
+    <img src="chb-logo-white.svg" alt="chb logo">
+  </footer>
   <script>
     /**************************************
       Constants and Variables
@@ -297,7 +329,7 @@
       let partIndex = 0;
       let separatorIndex = 0;
       // checks
-      if(parts.length < 2 || parts.length === separators.length){
+      if (parts.length < 2 || parts.length === separators.length) {
         return "Error";
       }
 
