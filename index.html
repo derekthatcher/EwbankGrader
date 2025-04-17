@@ -32,6 +32,11 @@
     background-color: #ecafaf;
   }
 
+  ul li {
+    list-style: none;
+    margin-bottom: 5px;
+  }
+
   #calibration {
     padding: 0 18px;
     max-height: 0;
@@ -366,6 +371,21 @@
 
         let listItem = document.createElement("li");
         let climbText = document.createTextNode(" " + climb.climbString + " = " + climb.grade + " [" + climb.sliderG + ".." + climb.sliderN + "]");
+        // Create the copy to inpiut button
+        let copyButton = document.createElement("button");
+        copyButton.textContent = "<";
+        copyButton.value = climb.climbString + "|" + climb.sliderN + "|" + climb.sliderG;
+        copyButton.addEventListener("click", function (event) {
+          const button = event.target;
+          let climb = button.value.split("|");
+          climbString.value = climb[0];
+          sliderN.value = climb[1];
+          sliderG.value = climb[2];
+          sliderOutputG.textContent = "Good rest change: " + sliderG.value;
+          sliderOutputN.textContent = "No rest change: " + sliderN.value;
+          gradeIt();
+          graphIt();
+        });
         // Create the delete button
         let deleteButton = document.createElement("button");
         deleteButton.textContent = "X";
@@ -374,6 +394,7 @@
           localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList)); // Update local storage
           updateClimbList(); // Re-render the list
         });
+        listItem.appendChild(copyButton);
         listItem.appendChild(nameInput);
         listItem.appendChild(climbText);
         listItem.appendChild(deleteButton);
