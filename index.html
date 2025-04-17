@@ -285,6 +285,10 @@
       while (partIndex < parts.length) {
         let part = parts[partIndex].trim(); // Remove leading/trailing spaces
         if (part) {
+          // deal with Vgrades
+          if(part.toUpperCase().startsWith("V")){
+            part = convertVgrade(part.toUpperCase(), !partIndex);
+          }
           if (!isNaN(parseFloat(part))) {
             if (formattedString) { // Add space if it's not the first part
               formattedString += " ";
@@ -302,6 +306,25 @@
         partIndex++;
       }
       return formattedString.trim(); // Remove trailing spaces
+    }
+
+    function convertVgrade(Vgrade, isAtStart){
+      // takes a Vgrade string "V6" and returns 26.3 (first) or 28 (second) 
+      let grade = Number(Vgrade.split("V")[1]);
+      if(grade < 5){
+        grade += 20;
+      }else if (grade > 7.5) {
+        grade += 22;
+      } else {
+        grade = 1.5*grade + 17.5;
+      }
+      //adjust for if at start of route or later.
+      if(isAtStart){
+        grade -= 0.7;
+      } else {
+        grade += 1;
+      }
+      return grade;
     }
 
     function getRestValue(restType) {
