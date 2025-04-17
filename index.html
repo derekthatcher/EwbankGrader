@@ -116,7 +116,7 @@
 
     document.querySelector("#save").addEventListener("click", function () {
       // save current state to local storage json object.
-      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': solve(climbString.value) });
+      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': solve(formatGradeString(climbString.value)) });
       localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
       updateClimbList()
       console.log(ewbankClimbList);
