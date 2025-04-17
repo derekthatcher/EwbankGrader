@@ -64,7 +64,7 @@
   <h1 id="title">Ewbank Grader</h1>
   <div class="container">
     <div class="column">
-      <div id="text">Enter strings like "25 N 25 G 25", currently spaces important. Rest options are N, B, M and G.
+      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades for very short sections. Rest options are N, B, M and G.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
       <div>
@@ -285,7 +285,7 @@
       while (partIndex < parts.length) {
         let part = parts[partIndex].trim(); // Remove leading/trailing spaces
         if (part) {
-          // deal with Vgrades
+          // deal with Vgrades 
           if(part.toUpperCase().startsWith("V")){
             part = convertVgrade(part.toUpperCase(), !partIndex);
           }
@@ -310,6 +310,7 @@
 
     function convertVgrade(Vgrade, isAtStart){
       // takes a Vgrade string "V6" and returns 26.3 (first) or 28 (second) 
+      // https://www.desmos.com/calculator/a7n2mkrfw7
       let grade = Number(Vgrade.split("V")[1]);
       if(grade < 5){
         grade += 20;
