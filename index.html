@@ -1,4 +1,5 @@
 <html>
+
 <head>
   <title>Ewbank Grader</title>
   <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
@@ -51,7 +52,7 @@
   }
 
   .collapsible {
-    margin-top:20px;
+    margin-top: 20px;
     background-color: #ebe9e9;
   }
 
@@ -69,7 +70,8 @@
   <h1 id="title">Ewbank Grader</h1>
   <div class="container">
     <div class="column">
-      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades for very short sections. Rest options are N, B, M and G.
+      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades. Rest options are N,
+        B, M and G.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
       <div>
@@ -78,8 +80,9 @@
       <button id="save">Save to local storage</button><br>
       <div class="collapsible"><strong>Calibration</strong></div>
       <div id="calibration">
-        <div>To calibrate - think about two climbs of the same grade stacked on top of each other, one pair with no rest and another with a good rest between. 
-          Set N to be the no rest increase in grade, and G to be the good rest increase. 
+        <div>To calibrate - think about two climbs of the same grade stacked on top of each other, one pair with no rest
+          and another with a good rest between.
+          Set N to be the no rest increase in grade, and G to be the good rest increase.
           By default N is 2.5, which means if you stack two 25s with no rest, you get a 27.5 (a 27/28).
           A good rest would add 1.75 grades.
         </div>
@@ -91,6 +94,7 @@
       </div>
     </div>
     <div class="column">
+      <h3>Benchmarks and saved climbs</h3>
       <ul id="climbList"></ul>
     </div>
   </div>
@@ -280,18 +284,22 @@
         return "Error";
       }
 
-      const parts = inputString.toUpperCase().split(/[NBGM]+/); // Split by N, B, M, G, case-insensitive
-      const separators = inputString.toUpperCase().match(/[NBGM]+/g) || []; // Extract separators
+      const parts = inputString.toUpperCase().split(/[NBGM\s]+/).filter(Boolean); // Split by N, B, M, G, case-insensitive
+      const separators = inputString.toUpperCase().match(/[NBGM]+/g).filter(Boolean) || []; // Extract separators
 
       let formattedString = "";
       let partIndex = 0;
       let separatorIndex = 0;
+      // checks
+      if(parts.length < 2 || parts.length === separators.length){
+        return "Error";
+      }
 
       while (partIndex < parts.length) {
         let part = parts[partIndex].trim(); // Remove leading/trailing spaces
         if (part) {
           // deal with Vgrades 
-          if(part.toUpperCase().startsWith("V")){
+          if (part.toUpperCase().startsWith("V")) {
             part = convertVgrade(part.toUpperCase(), !partIndex);
           }
           if (!isNaN(parseFloat(part))) {
@@ -310,22 +318,23 @@
         }
         partIndex++;
       }
+      console.log(formattedString);
       return formattedString.trim(); // Remove trailing spaces
     }
 
-    function convertVgrade(Vgrade, isAtStart){
+    function convertVgrade(Vgrade, isAtStart) {
       // takes a Vgrade string "V6" and returns 26.3 (first) or 28 (second) 
       // https://www.desmos.com/calculator/a7n2mkrfw7
       let grade = Number(Vgrade.split("V")[1]);
-      if(grade < 5){
+      if (grade < 5) {
         grade += 20;
-      }else if (grade > 7.5) {
+      } else if (grade > 7.5) {
         grade += 22;
       } else {
-        grade = 1.5*grade + 17.5;
+        grade = 1.5 * grade + 17.5;
       }
       //adjust for if at start of route or later.
-      if(isAtStart){
+      if (isAtStart) {
         grade -= 0.7;
       } else {
         grade += 1;
@@ -412,8 +421,25 @@
 
     // onload event
     document.addEventListener("DOMContentLoaded", function () {
+      // initial climb beanchmarks
+      let beanchmarks = [
+        {
+          'climbString': '31.6 G 33.6 B 32.6',
+          'grade': 35.89,
+          'name': "Papichulo 9a+.soft",
+          'sliderG': "1.75",
+          'sliderN': "2.5",
+        },
+        {
+          'climbString': '27 N V9.5 M 27',
+          'grade': 33.09,
+          'name': "Le Minimum 8c",
+          'sliderG': "1.75",
+          'sliderN': "2.5",
+        }
+      ];
       // Retrieve the climb list from local storage
-      ewbankClimbList = JSON.parse(localStorage.getItem("ewbankClimbList")) || [];
+      ewbankClimbList = JSON.parse(localStorage.getItem("ewbankClimbList")) || beanchmarks;
       updateClimbList();
       graphIt()
     });
