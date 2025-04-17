@@ -33,6 +33,10 @@
     background-color: #ecafaf;
   }
 
+  .noresult {
+    opacity: 0.3;
+  }
+
   ul li {
     list-style: none;
     margin-bottom: 5px;
@@ -80,8 +84,8 @@
       <button id="save">Save to local storage</button><br>
       <div class="collapsible"><strong>Calibration</strong></div>
       <div id="calibration">
-        <div>To calibrate - think about two climbs of the same grade stacked on top of each other, one pair with no rest
-          and another with a good rest between.
+        <div>To calibrate - think about two climbs of the same grade stacked on top of each other, one pair with no rest (N)
+          and another with a good rest (G) between.
           Set N to be the no rest increase in grade, and G to be the good rest increase.
           By default N is 2.5, which means if you stack two 25s with no rest, you get a 27.5 (a 27/28).
           A good rest would add 1.75 grades.
@@ -110,6 +114,7 @@
     const sliderOutputG = document.getElementById("sliderOutputG");
     const collapsible = document.querySelector(".collapsible");
     const content = document.querySelector("#calibration");
+    const output = document.getElementById('output');
     let climbListUL = document.getElementById("climbList");
     const gradeUpperBounds = { "soft": 0.79, "middle": 0, "hard": 0.19, "slash": 0.59 };
     const ctx = document.getElementById('myChart').getContext('2d');
@@ -162,9 +167,11 @@
       if (input != "Error") {
         result = solve(input);
         climbString.classList.remove("error");
-        document.getElementById('output').innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
+        output.classList.remove("noresult");
+        output.innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
       } else {
         climbString.classList.add("error");
+        output.classList.add("noresult");
       }
     };
 
