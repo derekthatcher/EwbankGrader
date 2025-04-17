@@ -74,8 +74,7 @@
   <h1 id="title">Ewbank Grader</h1>
   <div class="container">
     <div class="column">
-      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades. Rest options are N,
-        B, M and G.
+      <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades seperated by a letter (N, B, M or G) for the rest.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
       <div>
@@ -84,11 +83,11 @@
       <button id="save">Save to local storage</button><br>
       <div class="collapsible"><strong>Calibration</strong></div>
       <div id="calibration">
-        <div>To calibrate - think about two climbs of the same grade stacked on top of each other, one pair with no rest (N)
+        <div>To calibrate - think about two climbs of the same grade stacked on top of each other. One pair with no rest (N)
           and another with a good rest (G) between.
-          Set N to be the no rest increase in grade, and G to be the good rest increase.
-          By default N is 2.5, which means if you stack two 25s with no rest, you get a 27.5 (a 27/28).
-          A good rest would add 1.75 grades.
+          Set N to be the no rest increase in grade, and G to be the good rest increase.<br/>
+          For example, by default N is 2.5, which means if you stack two 25s with no rest you get a 27.5 (a 27/28).
+          A good rest would add 1.75 grades and result in a hard 26.
         </div>
         <input type="range" id="sliderN" min="1" max="4" step="0.01" value="2.5">
         <div id="sliderOutputN">No rest change: 2.5</div>
@@ -443,7 +442,15 @@
           'name': "Le Minimum 8c",
           'sliderG': "1.75",
           'sliderN': "2.5",
+        },
+        {
+          'climbString': '28 N V5 N V7 M 25',
+          'grade': 31.85,
+          'name': "Centripetal Force 32",
+          'sliderG': "1.75",
+          'sliderN': "2.5",
         }
+
       ];
       // Retrieve the climb list from local storage
       ewbankClimbList = JSON.parse(localStorage.getItem("ewbankClimbList")) || beanchmarks;
