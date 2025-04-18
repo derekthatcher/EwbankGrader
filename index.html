@@ -70,10 +70,20 @@
   }
 
   ul button{
-    border-color: #dddddd;
-    border-radius: 10px;
-    font-size: 0.4em;
-    padding: 1 3px;
+    border-radius: 0;
+    font-size: 1em;
+    padding: 1 5px;
+    background: none;
+    border-width: 1px;
+    margin: 4px;
+  }
+
+  ul button:hover {
+    background-color: #eaffd9;
+  }
+
+  ul button.delete:hover {
+    background-color: #ffd9d9;
   }
 
   #input {
@@ -466,6 +476,7 @@
         // Create the delete button
         let deleteButton = document.createElement("button");
         deleteButton.textContent = "X";
+        deleteButton.className = "delete";
         deleteButton.addEventListener("click", function () {
           console.log("deleting: ", ewbankClimbList[index]);
           ewbankClimbList.splice(index, 1); // Remove the item from the array
