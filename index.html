@@ -28,6 +28,12 @@
 
   h1 {
     text-align: center;
+    margin-top: 10vh;;
+  }
+
+  h3 {
+    margin: 0;
+    line-height: normal;
   }
 
   .container {
@@ -54,14 +60,30 @@
     opacity: 0.3;
   }
 
+  ul {
+    padding-left: 0;
+  }
+
   ul li {
     list-style: none;
     margin-bottom: 5px;
   }
 
+  ul button{
+    border-color: #dddddd;
+    border-radius: 10px;
+    font-size: 0.4em;
+    padding: 1 3px;
+  }
+
   #input {
     line-height: 1.5em;
     font-size: 1em;
+  }
+
+  #result {
+    margin-top: 20px;
+    margin-bottom: 20px;;
   }
 
   #calibration {
@@ -80,6 +102,10 @@
   .collapsible {
     margin-top: 20px;
     background-color: #ebe9e9;
+  }
+  .collapsible h4 {
+     margin-bottom: 0;
+     margin-left: 5px;
   }
 
   footer {
@@ -110,11 +136,11 @@
         rest.
       </div>
       <input type="text" id="input" name="input" size="80"><br>
-      <div>
+      <div id="result">
         <h3>Grade: <span id="output"></span></h3>
       </div>
       <button id="save">Save to local storage</button><br>
-      <div class="collapsible"><strong>Calibration</strong></div>
+      <div class="collapsible"><h4>Calibration</h4></div>
       <div id="calibration">
         <div>To calibrate - think about two climbs of the same grade stacked on top of each other. One pair with no rest
           (N)
@@ -221,7 +247,6 @@
       let restOptions = ["N", "B", "M", "G"];
       for (i = 0; i < 4; i++) {
         restValue = getRestValue(restOptions[i]);
-        console.log("rest: " + restValue);
         let a = ((4 - restValue) / 64)
         let b = (restValue / 8) - 8 * a;
         let c = 0;
@@ -442,6 +467,7 @@
         let deleteButton = document.createElement("button");
         deleteButton.textContent = "X";
         deleteButton.addEventListener("click", function () {
+          console.log("deleting: ", ewbankClimbList[index]);
           ewbankClimbList.splice(index, 1); // Remove the item from the array
           localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList)); // Update local storage
           updateClimbList(); // Re-render the list
