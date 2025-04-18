@@ -4,7 +4,9 @@
   <title>Ewbank Grader</title>
   <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
+  <meta name="description" content="Figure out how hard your rad link up is by breaking it down into parts.">
+  <meta name="keywords" content="Ewbank, climbing grades, sport climbing, grade converter, climbing scale, Australia, New Zealand, climbing tool">
+  <meta name="author" content="Derek Thatcher @ castlehillbasin.co.nz">
 <style>
   @import url('https://fonts.googleapis.com/css?family=Barlow|Barlow+Condensed|Barlow+Semi+Condensed&display=swap');
 
@@ -28,7 +30,7 @@
 
   h1 {
     text-align: center;
-    margin-top: 10vh;;
+    margin-top: 5vh;;
   }
 
   h3 {
@@ -137,7 +139,7 @@
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+</head>
 <body>
   <h1 id="title">Ewbank Grader</h1>
   <div class="container">
@@ -179,7 +181,6 @@
     /**************************************
       Constants and Variables
     **************************************/
-    let ewbankClimbList = []; //load from local storage
     const sliderN = document.getElementById("sliderN");
     const sliderG = document.getElementById("sliderG");
     const climbString = document.getElementById("input");
@@ -188,9 +189,10 @@
     const collapsible = document.querySelector(".collapsible");
     const content = document.querySelector("#calibration");
     const output = document.getElementById('output');
-    let climbListUL = document.getElementById("climbList");
     const gradeUpperBounds = { "soft": 0.79, "middle": 0, "hard": 0.19, "slash": 0.59 };
     const ctx = document.getElementById('myChart').getContext('2d');
+    let ewbankClimbList = []; //load from local storage
+    let climbListUL = document.getElementById("climbList");
     let graph = null;
 
     /**************************************
@@ -551,6 +553,4 @@
       updateClimbList();
       graphIt()
     });
-
-
   </script>
