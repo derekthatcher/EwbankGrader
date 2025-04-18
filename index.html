@@ -152,17 +152,18 @@
       <button id="save">Save to local storage</button><br>
       <div class="collapsible"><h4>Calibration</h4></div>
       <div id="calibration">
-        <div>To calibrate - think about two climbs of the same grade stacked on top of each other. One pair with no rest
-          (N)
-          and another with a good rest (G) between.
+        <div>To calibrate this to a particular crag or style think about two climbs of the same grade stacked on top of each other. Consider what the combined
+          grade would be with no rest (N) and also with a good rest (G).<br />
           Set N to be the no rest increase in grade, and G to be the good rest increase.<br />
           For example, by default N is 2.5, which means if you stack two 25s with no rest you get a 27.5 (a 27/28).
           A good rest would add 1.75 grades and result in a hard 26.
         </div>
-        <input type="range" id="sliderN" min="1" max="4" step="0.01" value="2.5">
+        <br/>
+        <input type="range" id="sliderN" min="1" max="4" step="0.1" value="2.5">
         <div id="sliderOutputN">No rest change: 2.5</div>
-        <input type="range" id="sliderG" min="1" max="4" step="0.01" value="1.75">
+        <input type="range" id="sliderG" min="1" max="4" step="0.1" value="1.75">
         <div id="sliderOutputG">Good rest change: 1.75</div>
+        <br/>
         <canvas id="myChart"></canvas>
       </div>
     </div>
@@ -337,7 +338,6 @@
           return start;
         }
 
-
         // Find a
         let a = ((4 - restValue) / 64)
         // Find b
@@ -347,7 +347,14 @@
         console.log("a: " + a + " b: " + b + "c: " + c);
         // Find quadratic.
         let x = end - start;
-        return Math.round((a * x * x + b * x + c + restValue) * 100) / 100;
+        let ans = Math.round((a * x * x + b * x + c + restValue) * 100) / 100;
+        if(ans < start){
+          return start;
+        } else if (ans < end){
+          return end;
+        }else {
+          return ans;
+        }
       } else {
         console.log("non number input: " + start + " or " + end);
         return "Error";
