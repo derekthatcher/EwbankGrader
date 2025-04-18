@@ -48,7 +48,7 @@
   .column {
     flex: 1;
     /* Equal width columns by default */
-    padding: 20px;
+    padding: 50px;
     box-sizing: border-box;
     /* Include padding in width calculations */
   }
@@ -91,11 +91,19 @@
   #input {
     line-height: 1.5em;
     font-size: 1em;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   #result {
     margin-top: 20px;
     margin-bottom: 20px;;
+  }
+
+  #output span {
+    color: #666;
+    font-size: 0.7em;
+    font-style: italic;
   }
 
   #calibration {
@@ -123,6 +131,7 @@
   footer {
     background-color: black;
     text-align: center;
+    width:100vw;
   }
 
   footer img {
@@ -131,10 +140,10 @@
   }
 
   /* Mobile Styles (adjust breakpoint as needed) */
-  @media (max-width: 600px) {
+  @media (max-width: 1000px) {
     .column {
       flex: 1 0 100%;
-      /* Make each column full width on mobile */
+      padding: 10px;
     }
   }
 </style>
@@ -147,7 +156,7 @@
       <div id="text">Enter strings like "25 N 25 G V6", Ewbank or V-grades seperated by a letter (N, B, M or G) for the
         rest.
       </div>
-      <input type="text" id="input" name="input" size="80"><br>
+      <input type="text" id="input" name="input"><br>
       <div id="result">
         <h3>Grade: <span id="output"></span></h3>
       </div>
@@ -243,7 +252,7 @@
         result = solve(input);
         climbString.classList.remove("error");
         output.classList.remove("noresult");
-        output.innerHTML = translateGradeValue(result) + " | " + Math.round(result * 100) / 100;
+        output.innerHTML = translateGradeValue(result) + " <span>" + Math.round(result * 100) / 100 + "</span>";
       } else {
         climbString.classList.add("error");
         output.classList.add("noresult");
