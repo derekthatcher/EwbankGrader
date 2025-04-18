@@ -198,15 +198,14 @@
     const collapsible = document.querySelector(".collapsible");
     const content = document.querySelector("#calibration");
     const output = document.getElementById('output');
+    const climbListUL = document.getElementById("climbList");
     const gradeUpperBounds = { "soft": 0.79, "middle": 0, "hard": 0.19, "slash": 0.59 };
     const ctx = document.getElementById('myChart').getContext('2d');
     let ewbankClimbList = []; //load from local storage
-    let climbListUL = document.getElementById("climbList");
     let graph = null;
 
     /**************************************
-      Functions
-      take string like "32 N 20 B 25" and return single grade.
+      Event Listeners
     **************************************/
     climbString.addEventListener("input", function () {
       gradeIt();
@@ -242,6 +241,10 @@
       }
 
     });
+
+    /**************************************
+      Functions
+    **************************************/
 
     function gradeIt() {
       // deal with different data strings
@@ -335,7 +338,6 @@
       }
     }
 
-    // take 20 "B" 25 and return single grade.
     function addTwoEwbank(start, rest, end) {
       start = Number(start);
       end = Number(end);
@@ -517,7 +519,9 @@
       });
     }
 
-    // onload event
+    /**************************************
+      On Load Event
+    **************************************/
     document.addEventListener("DOMContentLoaded", function () {
       // initial climb beanchmarks
       let beanchmarks = [

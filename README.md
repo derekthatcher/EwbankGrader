@@ -5,6 +5,8 @@ This is a simple Ewbank version of the MASTERPEICE DarthGrader.
 
 I did my own math using some set points from Darth, see: https://www.desmos.com/calculator/c3mshhgvzb . Polynomial used is just a quadratic, which is simple but does cause some errors on edge cases.
 
-You can calibrate it yourself, by considering two climbs of the same grade added together with both 'No rest' and a 'Good rest' between them. For example: two 25s, "25 N 25" by default gives a 27.5 (a 27/28). You might think this deserves a 28 at a particular crag, so set N to be 3
+To calibrate this to a particular crag or style think about two climbs of the same grade stacked on top of each other. Consider what the combined grade would be with no rest (N) and also with a good rest (G). Set N to be the no rest increase in grade, and G to be the good rest increase.
+
+For example, by default N is 2.5, which means if you stack two 25s with no rest you get a 27.5 (a 27/28). A good rest would add 1.75 grades and result in a hard 26.
 
 Can use V-grades, it converts them like this: https://www.desmos.com/calculator/a7n2mkrfw7 and does a similar adjustment to Darth.
