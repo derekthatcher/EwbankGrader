@@ -567,6 +567,7 @@
         try {
           const climbFromURL = JSON.parse(atob(encodedClimbs)); // Base64 decode
           climbString.value = climbFromURL;
+          gradeIt();
         } catch (error) {
           console.error("Invalid URL parameters:", error);
         }
