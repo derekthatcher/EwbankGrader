@@ -512,7 +512,7 @@
       } else if (decimal <= gradeUpperBounds.slash) {
         return wholeGrade + "/" + (wholeGrade + 1);
       } else {
-        return wholeGrade + ".soft";
+        return (wholeGrade + 1) + ".soft";
       }
     }
 
