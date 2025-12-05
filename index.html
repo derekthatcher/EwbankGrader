@@ -551,9 +551,6 @@
             ctx.clearRect(0, 0, LOGICAL_WIDTH, CANVAS_HEIGHT);
 
             // --- 1. Calculate Base Grade (N), Bar Range, and Relative Position (X) ---
-            
-            // New logic for N: N = floor(G + 0.39999). This makes the cutoff for rounding up at X.6 (exclusive).
-            // Example: 30.61 -> 31.00999 -> N=31. 31.6 -> 31.99999 -> N=31.
             const N = Math.floor(gradeValue + 0.39999); 
             const N_minus_1 = N - 1;
             const N_plus_1 = N + 1;
@@ -588,7 +585,6 @@
                 // 6. Soft (N+1): N+0.6 to N+0.8 (0.2 units)
                 { label: "soft", startX: NORM_1_2, endX: 1.0, color: '#bbdefa', labelColor: '#4b5563'}
             ];
-
 
             // --- 3. Draw the Segments (Bar) ---
             ctx.strokeStyle = '#4b5563'; // gray-600
@@ -643,22 +639,16 @@
                 let yPos = BAR_Y + BAR_HEIGHT + 10;
                 
                 ctx.fillText(gradeLabel, pixelX, yPos);
-                
-                // Draw vertical line for all boundary ticks
-                //ctx.fillRect(pixelX - 1, BAR_Y - 5, 2, BAR_HEIGHT + 10); // Vertical tick line
             };
 
             // Boundary Ticks
             drawTick(0.0, 0.0); // N-0.6
             drawTick(NORM_0_2, 0.2); // N-0.4
             drawTick(NORM_0_4, 0.4); // N-0.2
-
             drawTick(NORM_0_6, 0.6); 
-            
             drawTick(NORM_0_8, 0.8); // N+0.2
             drawTick(NORM_1_0, 1.0); // N+0.4
             drawTick(NORM_1_2, 1.2); // N+0.6
-            
             drawTick(1.0, 1.4); // N+0.8
 
 
