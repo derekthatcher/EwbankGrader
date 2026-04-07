@@ -480,21 +480,24 @@
     }
 
     function convertVgrade(Vgrade, isAtStart) {
-      // takes a Vgrade string "V6" and returns 26.3 (first) or 28 (second) 
-      // https://www.desmos.com/calculator/a7n2mkrfw7
+      // takes a Vgrade string "V6" and returns ewbank grade. 
+      // Like darthgrader, if the boulder is not at start it adds 1.7 - this seems too much
+      // Will perhaps make this a calibration? 
+      // New version uses sigmoid function.
       let grade = Number(Vgrade.split("V")[1]);
-      if (grade < 5) {
-        grade += 20;
-      } else if (grade > 7.5) {
-        grade += 22;
+      if (isNaN(grade) || !isFinite(grade)) {
+        grade = 0;
+        console.log("Grade is zero");
       } else {
-        grade = 1.5 * grade + 17.5;
+        // sigmoid function
+        const L = 24.06241;   // Numerator, max Vgrade.
+        const C = 5.95842;   // The offset constant
+        const k = 0.174986;   // The growth rate
+        grade = (C - Math.log((L / grade) - 1)) / k;
       }
-      //adjust for if at start of route or later.
-      if (isAtStart) {
-        grade -= 0.7;
-      } else {
-        grade += 1;
+      //adjust for if at start of route or later. Currently 0.8.
+      if (!isAtStart) {
+        grade += 0.8;
       }
       return grade;
     }
@@ -526,180 +529,180 @@
     }
 
     function updateGradeGraph(gradeValue) {
-            const canvas = document.getElementById('gradeGraph');
-            if (!canvas.getContext) {
-                console.error("Canvas not supported.");
-                return;
-            }
-            const ctx = canvas.getContext('2d');
-            
-            // --- Retina Fix: Get Device Pixel Ratio and calculate true dimensions ---
-            const dpr = window.devicePixelRatio || 1;
-            
-            // --- Dynamic Width Calculation (Logical width) ---
-            const resultContainer = document.getElementById('result');
-            const LOGICAL_WIDTH = resultContainer ? resultContainer.clientWidth : 800;
+      const canvas = document.getElementById('gradeGraph');
+      if (!canvas.getContext) {
+        console.error("Canvas not supported.");
+        return;
+      }
+      const ctx = canvas.getContext('2d');
 
-            // Set canvas dimensions for sharpness: actual pixels = logical pixels * dpr
-            canvas.width = LOGICAL_WIDTH * dpr;
-            canvas.height = CANVAS_HEIGHT * dpr;
-            canvas.style.width = LOGICAL_WIDTH + 'px'; // Set CSS size back to logical size
-            canvas.style.height = CANVAS_HEIGHT + 'px';
-            
-            // Scale the context by the DPR, so all subsequent drawing coordinates are in logical pixels
-            ctx.scale(dpr, dpr); 
+      // --- Retina Fix: Get Device Pixel Ratio and calculate true dimensions ---
+      const dpr = window.devicePixelRatio || 1;
 
-            // Clear the canvas using logical dimensions
-            ctx.clearRect(0, 0, LOGICAL_WIDTH, CANVAS_HEIGHT);
+      // --- Dynamic Width Calculation (Logical width) ---
+      const resultContainer = document.getElementById('result');
+      const LOGICAL_WIDTH = resultContainer ? resultContainer.clientWidth : 800;
 
-            // --- 1. Calculate Base Grade (N), Bar Range, and Relative Position (X) ---
-            const N = Math.floor(gradeValue + 0.39999); 
-            const N_minus_1 = N - 1;
-            const N_plus_1 = N + 1;
-            
-            // Bar Range: N-0.6 to N+0.8 
-            const N_START = N - 0.6; 
-            const N_END = N + 0.8;   
-            
-            // Calculate normalized position X (0.0 to 1.0) relative to the start point N_START
-            const X_NORM = (gradeValue - N_START) / TOTAL_SPAN; 
+      // Set canvas dimensions for sharpness: actual pixels = logical pixels * dpr
+      canvas.width = LOGICAL_WIDTH * dpr;
+      canvas.height = CANVAS_HEIGHT * dpr;
+      canvas.style.width = LOGICAL_WIDTH + 'px'; // Set CSS size back to logical size
+      canvas.style.height = CANVAS_HEIGHT + 'px';
 
-            // --- 2. Define Segments based on X-axis (0.0 to 1.0) ---
-            // Normalized boundary positions (multipliers of 1/1.4):
-            const NORM_0_2 = 0.2 / TOTAL_SPAN; // N-0.4
-            const NORM_0_4 = 0.4 / TOTAL_SPAN; // N-0.2 (Start of main N segment)
-            const NORM_0_6 = 0.6 / TOTAL_SPAN; // N.0 (Center of N-to-N+1 range)
-            const NORM_0_8 = 0.8 / TOTAL_SPAN; // N+0.2 (End of main N segment)
-            const NORM_1_0 = 1.0 / TOTAL_SPAN; // N+0.4
-            const NORM_1_2 = 1.2 / TOTAL_SPAN; // N+0.6
+      // Scale the context by the DPR, so all subsequent drawing coordinates are in logical pixels
+      ctx.scale(dpr, dpr);
 
-            const segments = [
-                // 1. Transition: N-0.6 to N-0.4 (0.2 units) - The (N-1)/N band
-                { label: `${N_minus_1}/${N}`, startX: 0.0, endX: NORM_0_2, color: '#d1dce6', labelColor: '#4b5563'},
-                // 2. Soft (N): N-0.4 to N-0.2 (0.2 units)
-                { label: "soft", startX: NORM_0_2, endX: NORM_0_4, color: '#bbdefa', labelColor: '#4b5563'},
-                // 3. N: N-0.2 to N+0.2 (0.4 units) - The main grade band
-                { label: `${N}`, startX: NORM_0_4, endX: NORM_0_8, color: '#a6d3f7', labelColor: '#4b5563'},
-                // 4. Hard (N): N+0.2 to N+0.4 (0.2 units)
-                { label: "hard", startX: NORM_0_8, endX: NORM_1_0, color: '#86c5f7', labelColor: '#4b5563'},
-                // 5. N/(N+1): N+0.4 to N+0.6 (0.2 units)
-                { label: `${N}/${N_plus_1}`, startX: NORM_1_0, endX: NORM_1_2, color: '#d1dce6', labelColor: '#4b5563'},
-                // 6. Soft (N+1): N+0.6 to N+0.8 (0.2 units)
-                { label: "soft", startX: NORM_1_2, endX: 1.0, color: '#bbdefa', labelColor: '#4b5563'}
-            ];
+      // Clear the canvas using logical dimensions
+      ctx.clearRect(0, 0, LOGICAL_WIDTH, CANVAS_HEIGHT);
 
-            // --- 3. Draw the Segments (Bar) ---
-            ctx.strokeStyle = '#4b5563'; // gray-600
-            ctx.lineWidth = 1;
+      // --- 1. Calculate Base Grade (N), Bar Range, and Relative Position (X) ---
+      const N = Math.floor(gradeValue + 0.39999);
+      const N_minus_1 = N - 1;
+      const N_plus_1 = N + 1;
 
-            segments.forEach(segment => {
-                const startPixel = segment.startX * LOGICAL_WIDTH;
-                const width = (segment.endX - segment.startX) * LOGICAL_WIDTH;
-                const centerX = startPixel + width / 2;
+      // Bar Range: N-0.6 to N+0.8 
+      const N_START = N - 0.6;
+      const N_END = N + 0.8;
 
-                // Draw the colored segment
-                ctx.fillStyle = segment.color;
-                ctx.fillRect(startPixel, BAR_Y, width, BAR_HEIGHT);
+      // Calculate normalized position X (0.0 to 1.0) relative to the start point N_START
+      const X_NORM = (gradeValue - N_START) / TOTAL_SPAN;
 
-                // Draw the segment label text
-                ctx.fillStyle = segment.labelColor;
-                ctx.font = 'bold 16px Inter';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(segment.label, centerX, BAR_Y + BAR_HEIGHT / 2);
+      // --- 2. Define Segments based on X-axis (0.0 to 1.0) ---
+      // Normalized boundary positions (multipliers of 1/1.4):
+      const NORM_0_2 = 0.2 / TOTAL_SPAN; // N-0.4
+      const NORM_0_4 = 0.4 / TOTAL_SPAN; // N-0.2 (Start of main N segment)
+      const NORM_0_6 = 0.6 / TOTAL_SPAN; // N.0 (Center of N-to-N+1 range)
+      const NORM_0_8 = 0.8 / TOTAL_SPAN; // N+0.2 (End of main N segment)
+      const NORM_1_0 = 1.0 / TOTAL_SPAN; // N+0.4
+      const NORM_1_2 = 1.2 / TOTAL_SPAN; // N+0.6
 
-                // Draw segment boundary lines
-                ctx.strokeStyle = '#4b5563';
-                ctx.strokeRect(startPixel, BAR_Y, width, BAR_HEIGHT);
-            });
+      const segments = [
+        // 1. Transition: N-0.6 to N-0.4 (0.2 units) - The (N-1)/N band
+        { label: `${N_minus_1}/${N}`, startX: 0.0, endX: NORM_0_2, color: '#d1dce6', labelColor: '#4b5563' },
+        // 2. Soft (N): N-0.4 to N-0.2 (0.2 units)
+        { label: "soft", startX: NORM_0_2, endX: NORM_0_4, color: '#bbdefa', labelColor: '#4b5563' },
+        // 3. N: N-0.2 to N+0.2 (0.4 units) - The main grade band
+        { label: `${N}`, startX: NORM_0_4, endX: NORM_0_8, color: '#a6d3f7', labelColor: '#4b5563' },
+        // 4. Hard (N): N+0.2 to N+0.4 (0.2 units)
+        { label: "hard", startX: NORM_0_8, endX: NORM_1_0, color: '#86c5f7', labelColor: '#4b5563' },
+        // 5. N/(N+1): N+0.4 to N+0.6 (0.2 units)
+        { label: `${N}/${N_plus_1}`, startX: NORM_1_0, endX: NORM_1_2, color: '#d1dce6', labelColor: '#4b5563' },
+        // 6. Soft (N+1): N+0.6 to N+0.8 (0.2 units)
+        { label: "soft", startX: NORM_1_2, endX: 1.0, color: '#bbdefa', labelColor: '#4b5563' }
+      ];
 
-            // --- 4. Draw the Major Tick Marks (Boundaries and Integer N) ---
-            ctx.fillStyle = '#1f2937'; // gray-800
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
+      // --- 3. Draw the Segments (Bar) ---
+      ctx.strokeStyle = '#4b5563'; // gray-600
+      ctx.lineWidth = 1;
 
-            // Function to draw tick mark and label
-            const drawTick = (normalizedX, gradeOffset) => {
-                let pixelX = normalizedX * LOGICAL_WIDTH;
-                // Display the precise decimal boundary value (e.g., 7.0)
-                let gradeLabel = (N_START + gradeOffset).toFixed(1);
-                let textAlign = 'center';
-                
-                // Adjust alignment for edges to prevent clipping
-                if (normalizedX < 0.01) {
-                    textAlign = 'left';
-                    pixelX += 2; // slight shift right
-                } else if (normalizedX > 0.99) {
-                    textAlign = 'right';
-                    pixelX -= 2; // slight shift left
-                }
-                
-                // All ticks are standard size and placed below the bar
-                ctx.font = 'bold 16px Inter';
-                ctx.textAlign = textAlign;
-                
-                let yPos = BAR_Y + BAR_HEIGHT + 10;
-                
-                ctx.fillText(gradeLabel, pixelX, yPos);
-            };
+      segments.forEach(segment => {
+        const startPixel = segment.startX * LOGICAL_WIDTH;
+        const width = (segment.endX - segment.startX) * LOGICAL_WIDTH;
+        const centerX = startPixel + width / 2;
 
-            // Boundary Ticks
-            drawTick(0.0, 0.0); // N-0.6
-            drawTick(NORM_0_2, 0.2); // N-0.4
-            drawTick(NORM_0_4, 0.4); // N-0.2
-            drawTick(NORM_0_6, 0.6); 
-            drawTick(NORM_0_8, 0.8); // N+0.2
-            drawTick(NORM_1_0, 1.0); // N+0.4
-            drawTick(NORM_1_2, 1.2); // N+0.6
-            drawTick(1.0, 1.4); // N+0.8
+        // Draw the colored segment
+        ctx.fillStyle = segment.color;
+        ctx.fillRect(startPixel, BAR_Y, width, BAR_HEIGHT);
 
+        // Draw the segment label text
+        ctx.fillStyle = segment.labelColor;
+        ctx.font = 'bold 16px Inter';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(segment.label, centerX, BAR_Y + BAR_HEIGHT / 2);
 
-            // --- 5. Draw the Vertical Marker for gradeValue ---
+        // Draw segment boundary lines
+        ctx.strokeStyle = '#4b5563';
+        ctx.strokeRect(startPixel, BAR_Y, width, BAR_HEIGHT);
+      });
 
-            // Calculate the pixel position of the actual gradeValue using X_NORM
-            const markerX = X_NORM * LOGICAL_WIDTH;
+      // --- 4. Draw the Major Tick Marks (Boundaries and Integer N) ---
+      ctx.fillStyle = '#1f2937'; // gray-800
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
 
-            // Draw the vertical line marker
-            ctx.beginPath();
-            ctx.strokeStyle = '#000000'; // Black line
-            ctx.lineWidth = 3;
-            ctx.moveTo(markerX, BAR_Y - 10); // Start slightly above the bar
-            ctx.lineTo(markerX, BAR_Y + BAR_HEIGHT + 10); // End slightly below the bar
-            ctx.stroke();
-            ctx.closePath();
+      // Function to draw tick mark and label
+      const drawTick = (normalizedX, gradeOffset) => {
+        let pixelX = normalizedX * LOGICAL_WIDTH;
+        // Display the precise decimal boundary value (e.g., 7.0)
+        let gradeLabel = (N_START + gradeOffset).toFixed(1);
+        let textAlign = 'center';
 
-            // Draw the label for the gradeValue
-            ctx.fillStyle = '#000000';
-            ctx.font = 'bold 20px Inter';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-
-            // Determine label position to avoid clipping
-            let labelX = markerX;
-            // Adjust if too close to the left edge
-            if (markerX < 50) {
-                ctx.textAlign = 'left';
-                labelX = markerX + 5;
-            }
-            // Adjust if too close to the right edge
-            else if (markerX > LOGICAL_WIDTH - 50) {
-                ctx.textAlign = 'right';
-                labelX = markerX - 5;
-            } else {
-                ctx.textAlign = 'center';
-            }
-
-
-            // Draw the grade label above the bar
-            ctx.fillText(`${gradeValue.toFixed(2)}`, labelX, BAR_Y - 10);
-
-            // Draw a small circle at the base of the marker for visual emphasis
-            ctx.beginPath();
-            ctx.arc(markerX, BAR_Y + BAR_HEIGHT, 5, 0, Math.PI * 2);
-            ctx.fillStyle = '#000000';
-            ctx.fill();
-            ctx.closePath();
+        // Adjust alignment for edges to prevent clipping
+        if (normalizedX < 0.01) {
+          textAlign = 'left';
+          pixelX += 2; // slight shift right
+        } else if (normalizedX > 0.99) {
+          textAlign = 'right';
+          pixelX -= 2; // slight shift left
         }
+
+        // All ticks are standard size and placed below the bar
+        ctx.font = 'bold 16px Inter';
+        ctx.textAlign = textAlign;
+
+        let yPos = BAR_Y + BAR_HEIGHT + 10;
+
+        ctx.fillText(gradeLabel, pixelX, yPos);
+      };
+
+      // Boundary Ticks
+      drawTick(0.0, 0.0); // N-0.6
+      drawTick(NORM_0_2, 0.2); // N-0.4
+      drawTick(NORM_0_4, 0.4); // N-0.2
+      drawTick(NORM_0_6, 0.6);
+      drawTick(NORM_0_8, 0.8); // N+0.2
+      drawTick(NORM_1_0, 1.0); // N+0.4
+      drawTick(NORM_1_2, 1.2); // N+0.6
+      drawTick(1.0, 1.4); // N+0.8
+
+
+      // --- 5. Draw the Vertical Marker for gradeValue ---
+
+      // Calculate the pixel position of the actual gradeValue using X_NORM
+      const markerX = X_NORM * LOGICAL_WIDTH;
+
+      // Draw the vertical line marker
+      ctx.beginPath();
+      ctx.strokeStyle = '#000000'; // Black line
+      ctx.lineWidth = 3;
+      ctx.moveTo(markerX, BAR_Y - 10); // Start slightly above the bar
+      ctx.lineTo(markerX, BAR_Y + BAR_HEIGHT + 10); // End slightly below the bar
+      ctx.stroke();
+      ctx.closePath();
+
+      // Draw the label for the gradeValue
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 20px Inter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+
+      // Determine label position to avoid clipping
+      let labelX = markerX;
+      // Adjust if too close to the left edge
+      if (markerX < 50) {
+        ctx.textAlign = 'left';
+        labelX = markerX + 5;
+      }
+      // Adjust if too close to the right edge
+      else if (markerX > LOGICAL_WIDTH - 50) {
+        ctx.textAlign = 'right';
+        labelX = markerX - 5;
+      } else {
+        ctx.textAlign = 'center';
+      }
+
+
+      // Draw the grade label above the bar
+      ctx.fillText(`${gradeValue.toFixed(2)}`, labelX, BAR_Y - 10);
+
+      // Draw a small circle at the base of the marker for visual emphasis
+      ctx.beginPath();
+      ctx.arc(markerX, BAR_Y + BAR_HEIGHT, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#000000';
+      ctx.fill();
+      ctx.closePath();
+    }
 
 
     function updateClimbList() {
@@ -789,49 +792,49 @@
       let beanchmarks = [
         {
           'climbString': '32 G V13 B 35 G 27',
-          'grade': 37.95,
+          'grade': 37.86,
           'name': "Bibliographie 9b+",
           'sliderG': "1.75",
           'sliderN': "2.5",
         },
         {
           'climbString': '27 N V9.5 M 27',
-          'grade': 33.09,
+          'grade': 33.03,
           'name': "Le Minimum 8c",
           'sliderG': "1.75",
           'sliderN': "2.5",
         },
         {
-          'climbString': '28 N V5 N V7 M 25',
-          'grade': 31.85,
+          'climbString': '28 N V7 M 25',
+          'grade': 31.53,
           'name': "Centripetal Force 32",
           'sliderG': "1.75",
           'sliderN': "2.5",
         },
         {
           'climbString': '25 N V10 G 27',
-          'grade': 33.02,
+          'grade': 32.93,
           'name': "Paint it Black 33",
           'sliderG': "1.75",
           'sliderN': "2.5",
         },
         {
           'climbString': '22 N 27 N 24 G V7 N V4 B V5 M 27',
-          'grade': 32.4,
+          'grade': 32.95,
           'name': "Kaz's Project",
           'sliderG': "1.8",
           'sliderN': "3",
         },
         {
           'climbString': 'V7 N 26 M 25 N V6',
-          'grade': 31.2,
+          'grade': 31.93,
           'name': "Godspeed",
-          'sliderG': "1.75",
+          'sliderG': "1.5",
           'sliderN': "2.5",
         },
         {
           'climbString': '35 B 29 B V10 M V11 M 29',
-          'grade': 38.07,
+          'grade': 38.00,
           'name': "The End Is the Beginning Is the End",
           'sliderG': "2",
           'sliderN': "3",
