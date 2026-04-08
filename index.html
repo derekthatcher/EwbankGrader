@@ -17,6 +17,7 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css?family=Barlow|Barlow+Condensed|Barlow+Semi+Condensed&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;900&display=swap');
 
     body {
       text-align: left;
@@ -39,7 +40,7 @@
     h1 {
       text-align: center;
       margin-top: 5vh;
-      ;
+      font-family: Rubik;
     }
 
     h3 {
@@ -481,8 +482,8 @@
 
     function convertVgrade(Vgrade, isAtStart) {
       // takes a Vgrade string "V6" and returns ewbank grade. 
-      // Like darthgrader, if the boulder is not at start it adds 1.7 - this seems too much
-      // Will perhaps make this a calibration? 
+      // Like darthgrader, if the boulder is not at start it adds 0.8 - this seems too much
+      // https://www.desmos.com/calculator/vd7fopxnqb
       // New version uses sigmoid function.
       let grade = Number(Vgrade.split("V")[1]);
       if (isNaN(grade) || !isFinite(grade)) {
@@ -499,6 +500,7 @@
       if (!isAtStart) {
         grade += 0.8;
       }
+      console.log (Vgrade + ": " + grade);
       return grade;
     }
 
@@ -819,8 +821,8 @@
           'sliderN': "2.5",
         },
         {
-          'climbString': '22 N 27 N 24 G V7 N V4 B V5 M 27',
-          'grade': 32.95,
+          'climbString': '26 N 24 G V7 N V5 B V4.5 M 26',
+          'grade': 32.78,
           'name': "Kaz's Project",
           'sliderG': "1.8",
           'sliderN': "3",
