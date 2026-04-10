@@ -482,7 +482,7 @@
 
     function convertVgrade(Vgrade, isAtStart) {
       // takes a Vgrade string "V6" and returns ewbank grade. 
-      // Like darthgrader, if the boulder is not at start it adds 0.8 - this seems too much
+      // Like darthgrader, if the boulder is not at start it adds and adustment (darth used 1.7, I use 0.8)
       // https://www.desmos.com/calculator/vd7fopxnqb
       // New version uses sigmoid function.
       let grade = Number(Vgrade.split("V")[1]);
