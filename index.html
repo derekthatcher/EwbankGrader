@@ -237,7 +237,7 @@
 
     document.querySelector("#save").addEventListener("click", function () {
       // save current state to local storage json object.
-      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': solve(formatGradeString(climbString.value)) });
+      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': Math.round(solve(formatGradeString(climbString.value))*100)/100 });
       localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
       updateClimbList()
       console.log(ewbankClimbList);
@@ -384,6 +384,10 @@
     }
 
     function solve(inputString) {
+      if(Number.isNaN(inputString)){
+        console.log("Error: " + inputString);
+        return "Error: " + inputString;
+      }
       gradeArray = inputString.split(" ");
       if (gradeArray.length === 3) {
         return addTwoEwbank(gradeArray[0], gradeArray[1], gradeArray[2]);
@@ -486,8 +490,8 @@
       // https://www.desmos.com/calculator/vd7fopxnqb
       // New version uses sigmoid function.
       let grade = Number(Vgrade.split("V")[1]);
-      if (isNaN(grade) || !isFinite(grade)) {
-        grade = 0;
+      if (isNaN(grade) || !isFinite(grade) || grade == 0) {
+        grade = 13;
         console.log("Grade is zero");
       } else {
         // sigmoid function
