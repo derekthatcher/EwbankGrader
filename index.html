@@ -227,6 +227,7 @@
     const BAR_HEIGHT = 40;
     const BAR_Y = 55;
     const TOTAL_SPAN = 1.4;
+    let easierStart = {"N": 0.5, "B": 0.4, "M": 0.2, "G":0.1};
 
     /**************************************
       Event Listeners
@@ -405,6 +406,10 @@
     function addTwoEwbank(start, rest, end) {
       start = Number(start);
       end = Number(end);
+      // adjustment - if easier start than next bit, do little adjustment.
+      if (start < end) {
+        start -= easierStart[rest]/(end-start);
+      }
       if (!isNaN(start) && !isNaN(end)) {
         restValue = getRestValue(rest);
         //test basic conditions
