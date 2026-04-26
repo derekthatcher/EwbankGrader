@@ -227,7 +227,7 @@
     const BAR_HEIGHT = 40;
     const BAR_Y = 55;
     const TOTAL_SPAN = 1.4;
-    let easierStart = {"N": 0.5, "B": 0.4, "M": 0.2, "G":0.1};
+    let easierStart = { "N": 0.05, "B": 0.04, "M": 0.03, "G": 0.01 };
 
     /**************************************
       Event Listeners
@@ -238,7 +238,7 @@
 
     document.querySelector("#save").addEventListener("click", function () {
       // save current state to local storage json object.
-      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': Math.round(solve(formatGradeString(climbString.value))*100)/100 });
+      ewbankClimbList.push({ 'climbString': climbString.value, 'sliderN': sliderN.value, 'sliderG': sliderG.value, 'grade': Math.round(solve(formatGradeString(climbString.value)) * 100) / 100 });
       localStorage.setItem("ewbankClimbList", JSON.stringify(ewbankClimbList));
       updateClimbList()
       console.log(ewbankClimbList);
@@ -385,7 +385,7 @@
     }
 
     function solve(inputString) {
-      if(Number.isNaN(inputString)){
+      if (Number.isNaN(inputString)) {
         console.log("Error: " + inputString);
         return "Error: " + inputString;
       }
@@ -406,10 +406,6 @@
     function addTwoEwbank(start, rest, end) {
       start = Number(start);
       end = Number(end);
-      // adjustment - if easier start than next bit, do little adjustment.
-      if (start < end) {
-        start -= easierStart[rest]/(end-start);
-      }
       if (!isNaN(start) && !isNaN(end)) {
         restValue = getRestValue(rest);
         //test basic conditions
@@ -430,6 +426,12 @@
         // Find quadratic.
         let x = end - start;
         let ans = Math.round((a * x * x + b * x + c + restValue) * 100) / 100;
+
+        // adjustment - if easier start than next bit, do little adjustment.
+        if (start < end) {
+          ans += easierStart[rest]*(end - start);
+          console.log(easierStart[rest]);
+        }
         if (ans < start) {
           return start;
         } else if (ans < end) {
@@ -509,7 +511,7 @@
       if (!isAtStart) {
         grade += 0.8;
       }
-      console.log (Vgrade + ": " + grade);
+      console.log(Vgrade + ": " + grade);
       return grade;
     }
 
