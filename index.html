@@ -503,7 +503,7 @@
       } else {
         // sigmoid function
         const L = 24.06241;   // Numerator, max Vgrade.
-        const C = 5.95842;   // The offset constant
+        const C = 5.9;   // The offset constant
         const k = 0.174986;   // The growth rate
         grade = (C - Math.log((L / grade) - 1)) / k;
       }
